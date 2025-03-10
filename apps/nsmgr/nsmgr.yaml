@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -17,7 +16,7 @@ spec:
     spec:
       serviceAccount: nsmgr-sa
       containers:
-        - image: ghcr.io/networkservicemesh/ci/cmd-nsmgr:b4ad072
+        - image: ghcr.io/networkservicemesh/cmd-nsmgr:v1.14.0
           imagePullPolicy: IfNotPresent
           name: nsmgr
           ports:
@@ -31,15 +30,13 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: NSM_LOG_LEVEL
-              value: TRACE
+              value: INFO
             - name: NSM_PPROF_ENABLED
-              value: "true"
+              value: "false"
             - name: NSM_PPROF_LISTEN_ON
               value: "localhost:6060"
             - name: NSM_REGISTRY_URL
               value: "registry:5002"
-            #            - name: DLV_LISTEN_NSMGR
-            #              value: :40000
             - name: POD_IP
               valueFrom:
                 fieldRef:
@@ -62,9 +59,11 @@ spec:
             requests:
               memory: 100Mi
               cpu: 200m
+              networkservicemesh.io/socket: "1"
             limits:
               memory: 200Mi
               cpu: 400m
+              networkservicemesh.io/socket: "1"
           readinessProbe:
             exec:
               command: ["/bin/grpc-health-probe", "-spiffe", "-addr=unix:///var/lib/networkservicemesh/nsm.io.sock"]
@@ -85,12 +84,12 @@ spec:
               command: ["/bin/grpc-health-probe", "-spiffe", "-addr=unix:///var/lib/networkservicemesh/nsm.io.sock"]
             failureThreshold: 25
             periodSeconds: 5
-        - image: ghcr.io/networkservicemesh/ci/cmd-exclude-prefixes-k8s:e03b88e
+        - image: ghcr.io/networkservicemesh/cmd-exclude-prefixes-k8s:v1.14.0
           imagePullPolicy: IfNotPresent
           name: exclude-prefixes
           env:
             - name: NSM_LOG_LEVEL
-              value: TRACE
+              value: INFO
           volumeMounts:
             - name: exclude-prefixes-volume
               mountPath: /var/lib/networkservicemesh/config/
